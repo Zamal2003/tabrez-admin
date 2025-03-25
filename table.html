@@ -415,55 +415,36 @@
         .catch((error) => console.error("Error fetching data:", error));
 
       // Download excel file
-      document
-        .getElementById("downloadExcel")
-        .addEventListener("click", function () {
-          const table = document.getElementById("observationsTable");
-          const workbook = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-          const worksheet = workbook.Sheets["Sheet1"];
-          const range = XLSX.utils.decode_range(worksheet["!ref"]);
+    document.getElementById('downloadExcel').addEventListener('click', function () {
+    const table = document.getElementById('observationsTable');
+    const clonedTable = table.cloneNode(true); // Clone table to avoid modifying original
 
-          // Ensure date column (3rd column, index 2) has correct formatting
-          for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-            const cellAddress = { c: 2, r: R }; // Target Date column (index 2)
-            const cellRef = XLSX.utils.encode_cell(cellAddress);
+    // Remove last two columns (Update/Delete buttons and Action column)
+    for (let i = 0; i < clonedTable.rows.length; i++) {
+        clonedTable.rows[i].deleteCell(-1); // Delete last column
+    }
 
-            if (worksheet[cellRef]) {
-              let dateValue = worksheet[cellRef].v;
+    const workbook = XLSX.utils.table_to_book(clonedTable, { sheet: "Sheet1" });
+    const worksheet = workbook.Sheets["Sheet1"];
+    const range = XLSX.utils.decode_range(worksheet['!ref']); // Get the range of the sheet
 
-              // Ensure it's a valid date
-              if (!isNaN(Date.parse(dateValue))) {
-                const dateObj = new Date(dateValue);
-
-                // Format date as "DD-MM-YYYY"
-                const formattedDate = `${dateObj
-                  .getDate()
-                  .toString()
-                  .padStart(2, "0")}-${(dateObj.getMonth() + 1)
-                  .toString()
-                  .padStart(2, "0")}-${dateObj.getFullYear()}`;
-
-                // Set the cell's value and formatting
-                worksheet[cellRef].v = formattedDate;
-                worksheet[cellRef].t = "s"; // Force cell to text type to prevent Excel mishandling
-              }
+    // Format dates as MM/DD/YYYY
+    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+        const cellAddress = { c: 2, r: R }; // Date column is the 3rd column (index 2)
+        const cellRef = XLSX.utils.encode_cell(cellAddress);
+        if (worksheet[cellRef]) {
+            const dateValue = new Date(worksheet[cellRef].v);
+            if (!isNaN(dateValue)) {
+                // Format date as MM/DD/YYYY
+                const formattedDate = `${dateValue.getMonth() + 1}/${dateValue.getDate()}/${dateValue.getFullYear()}`;
+                worksheet[cellRef].t = 's'; // Set cell type as string
+                worksheet[cellRef].v = formattedDate; // Set formatted date value
             }
-          }
+        }
+    }
 
-          // Auto-adjust column width
-          worksheet["!cols"] = [
-            { width: 15 },
-            { width: 15 },
-            { width: 15 },
-            { width: 15 },
-            { width: 15 },
-            { width: 15 },
-            { width: 15 },
-          ];
-
-          // Export file
-          XLSX.writeFile(workbook, "Observations.xlsx");
-        });
+    XLSX.writeFile(workbook, 'Observations.xlsx'); // Download Excel file
+});
 
       // Add event listeners for update and delete buttons
       function addEventListeners() {
