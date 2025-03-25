@@ -415,37 +415,47 @@
         .catch((error) => console.error("Error fetching data:", error));
 
       // Download excel file
-    document.getElementById('downloadExcel').addEventListener('click', function () {
+ document.getElementById('downloadExcel').addEventListener('click', function () {
     const table = document.getElementById('observationsTable');
     const clonedTable = table.cloneNode(true); // Clone table to avoid modifying original
 
-    // Remove last two columns (Update/Delete buttons and Action column)
+    // Remove last column (Action column with buttons)
     for (let i = 0; i < clonedTable.rows.length; i++) {
-        clonedTable.rows[i].deleteCell(-1); // Delete last column
+        clonedTable.rows[i].deleteCell(-1);
     }
 
     const workbook = XLSX.utils.table_to_book(clonedTable, { sheet: "Sheet1" });
     const worksheet = workbook.Sheets["Sheet1"];
-    const range = XLSX.utils.decode_range(worksheet['!ref']); // Get the range of the sheet
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
 
-    // Format dates as MM/DD/YYYY
+    // Format dates properly
     for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-        const cellAddress = { c: 2, r: R }; // Date column is the 3rd column (index 2)
+        const cellAddress = { c: 2, r: R }; // Assuming date is in 3rd column (index 2)
         const cellRef = XLSX.utils.encode_cell(cellAddress);
+        
         if (worksheet[cellRef]) {
-            const dateValue = new Date(worksheet[cellRef].v);
+            // Get the actual text content from the table cell
+            const tableRow = clonedTable.rows[R];
+            const tableCell = tableRow.cells[cellAddress.c];
+            const cellText = tableCell.textContent.trim();
+            
+            // Try parsing the date from the visible text
+            const dateValue = new Date(cellText);
+            
             if (!isNaN(dateValue)) {
-                // Format date as MM/DD/YYYY
+                // Format as MM/DD/YYYY
                 const formattedDate = `${dateValue.getMonth() + 1}/${dateValue.getDate()}/${dateValue.getFullYear()}`;
-                worksheet[cellRef].t = 's'; // Set cell type as string
-                worksheet[cellRef].v = formattedDate; // Set formatted date value
+                worksheet[cellRef].t = 's'; // Set as string
+                worksheet[cellRef].v = formattedDate;
+            } else {
+                // Fallback to original value if date parsing fails
+                worksheet[cellRef].v = cellText;
             }
         }
     }
 
-    XLSX.writeFile(workbook, 'Observations.xlsx'); // Download Excel file
+    XLSX.writeFile(workbook, 'Observations.xlsx');
 });
-
       // Add event listeners for update and delete buttons
       function addEventListeners() {
         // Delete functionality
