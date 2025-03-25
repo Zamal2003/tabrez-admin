@@ -380,7 +380,7 @@
       };
 
       // Fetch data from the API
-      fetch("https://zamal-server.vercel.app/api/observations")
+      fetch("https://tabrez-server1.vercel.app/api/observations")
         .then((response) => response.json())
         .then((data) => {
           const tableBody = document.querySelector("#observationsTable tbody");
@@ -480,7 +480,7 @@
             }
 
             if (confirm("Are you sure you want to delete this observation?")) {
-              fetch(`https://zamal-server.vercel.app/api/observations/${observationId}`, {
+              fetch(`https://tabrez-server1.vercel.app/api/observations/${observationId}`, {
                 method: "DELETE",
                 headers: {
                   Authorization: `Bearer ${token}`,
@@ -555,7 +555,7 @@
 
                   // ✅ Send Updated Data to API
                   fetch(
-                    `https://zamal-server.vercel.app/api/observations/${observationId}`,
+                    `https://tabrez-server1.vercel.app/api/observations/${observationId}`,
                     {
                       method: "PUT",
                       headers: {
